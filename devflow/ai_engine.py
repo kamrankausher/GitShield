@@ -1,6 +1,6 @@
 from transformers import pipeline
 
-# Load lightweight model
+# 🔥 Load once globally (IMPORTANT)
 generator = pipeline("text-generation", model="distilgpt2")
 
 
@@ -12,13 +12,18 @@ You are an expert software engineer mentor.
 Issue:
 {context}
 
-Provide:
-1. Better suggestion
-2. Explanation
+Give short and clear suggestion:
 """
 
     try:
-        result = generator(prompt, max_length=80, num_return_sequences=1)
+        result = generator(
+            prompt,
+            max_length=60,
+            num_return_sequences=1,
+            do_sample=True
+        )
+
         return result[0]["generated_text"]
+
     except Exception as e:
         return f"AI Error: {e}"
