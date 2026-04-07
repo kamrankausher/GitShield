@@ -5,9 +5,13 @@ from devflow.git_analyzer import (
     check_untracked_files,
     check_large_files
 )
+from devflow.mentor import explain_warning
+from devflow.memory import update_memory
+
 import sys
 import subprocess
-from devflow.mentor import explain_warning
+
+
 # -------------------------------
 # STEP 1: Security Scan (BLOCK)
 # -------------------------------
@@ -21,14 +25,16 @@ if issues:
     
     sys.exit(1)
 
+
 # -------------------------------
-# STEP 2: Get commit message (FIXED)
+# STEP 2: Get commit message
 # -------------------------------
 try:
     with open(".git/COMMIT_EDITMSG", "r") as f:
         commit_msg = f.read().strip()
 except:
     commit_msg = ""
+
 
 # -------------------------------
 # STEP 3: Get staged files
@@ -40,6 +46,7 @@ try:
 except:
     staged_files = []
 
+
 # -------------------------------
 # STEP 4: Analyze
 # -------------------------------
@@ -48,23 +55,38 @@ warnings = []
 warnings += analyze_commit_message(commit_msg)
 warnings += analyze_staged_files(staged_files)
 
-# 🔥 NEW INTELLIGENCE
+# 🔥 Git Intelligence
 warnings += check_main_branch()
 warnings += check_untracked_files()
 warnings += check_large_files(staged_files)
 
+
 # -------------------------------
-# STEP 5: Show warnings
+# STEP 5: Update Memory FIRST
+# -------------------------------
+memory = update_memory(warnings)
+
+
+# -------------------------------
+# STEP 6: Show warnings
 # -------------------------------
 if warnings:
     print("\n⚠️ Suggestions:\n")
-for w in warnings:
-    print(w)
-    
-    explanation = explain_warning(w)
-    
-    if explanation:
-        print(f"💡 Suggestion: {explanation['suggestion']}")
-        print(f"📘 Why: {explanation['why']}\n")
+
+    for w in warnings:
+        print(w)
+
+        # 💡 Explanation (AI Mentor)
+        explanation = explain_warning(w)
+        if explanation:
+            print(f"💡 Suggestion: {explanation['suggestion']}")
+            print(f"📘 Why: {explanation['why']}")
+
+        # 🧠 Personalized feedback
+        count = memory.get(w, 0)
+        if count >= 3:
+            print(f"🧠 Notice: You have encountered this issue {count} times. Consider improving this practice.\n")
+
+
 print("\n✅ Commit allowed")
 sys.exit(0)
