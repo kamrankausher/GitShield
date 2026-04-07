@@ -54,3 +54,16 @@ if warnings:
 
 print("\n✅ Commit allowed")
 sys.exit(0)
+
+from devflow.git_analyzer import (
+    check_main_branch,
+    check_untracked_files,
+    check_large_files
+)
+
+# -------------------------------
+# STEP 6: Git workflow analysis
+# -------------------------------
+warnings += check_main_branch()
+warnings += check_untracked_files()
+warnings += check_large_files(staged_files)
