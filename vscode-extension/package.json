@@ -1,0 +1,63 @@
+{
+    "name": "gitshield",
+    "displayName": "GitShield",
+    "description": "AI-powered Git Guardian — prevents secret leaks, enforces best practices, coaches developers",
+    "version": "1.0.0",
+    "publisher": "gitshield",
+    "engines": { "vscode": "^1.80.0" },
+    "categories": ["Other", "Linters"],
+    "activationEvents": ["workspaceContains:.git"],
+    "main": "./extension.js",
+    "icon": "icon.png",
+    "contributes": {
+        "commands": [
+            { "command": "gitshield.scan", "title": "GitShield: Security Scan" },
+            { "command": "gitshield.check", "title": "GitShield: Pre-Commit Check" },
+            { "command": "gitshield.health", "title": "GitShield: Repository Health" },
+            { "command": "gitshield.fix", "title": "GitShield: Recovery Wizard" },
+            { "command": "gitshield.init", "title": "GitShield: Install Hooks" },
+            { "command": "gitshield.stats", "title": "GitShield: Developer Stats" },
+            { "command": "gitshield.doctor", "title": "GitShield: System Diagnostic" },
+            { "command": "gitshield.panel", "title": "GitShield: Open Dashboard" }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "gitshield",
+                    "title": "GitShield",
+                    "icon": "$(shield)"
+                }
+            ]
+        },
+        "views": {
+            "gitshield": [
+                { "id": "gitshield.status", "name": "Status" },
+                { "id": "gitshield.issues", "name": "Issues" },
+                { "id": "gitshield.suggestions", "name": "Suggestions" }
+            ]
+        },
+        "configuration": {
+            "title": "GitShield",
+            "properties": {
+                "gitshield.autoScan": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically scan on file save"
+                },
+                "gitshield.strictMode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Block all warnings (not just critical)"
+                },
+                "gitshield.showNotifications": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show notification popups for issues"
+                }
+            }
+        }
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.80.0"
+    }
+}
