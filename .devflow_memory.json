@@ -1,6 +1,6 @@
 {
-    "\u26a0\ufe0f Commit message is too vague": 5,
-    "\u26a0\ufe0f You are committing directly to MAIN branch (use feature branch)": 5,
+    "\u26a0\ufe0f Commit message is too vague": 6,
+    "\u26a0\ufe0f You are committing directly to MAIN branch (use feature branch)": 6,
     "\u26a0\ufe0f You have 1 untracked files": 1,
     "\u26a0\ufe0f You have 4 untracked file(s): .devflow_memory.json, devflow/__pycache__/ai_engine.cpython-314.pyc, devflow/__pycache__/memory.cpython-314.pyc": 1,
     "\u26a0\ufe0f Too many files in one commit (consider splitting)": 1

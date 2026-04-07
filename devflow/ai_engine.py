@@ -1,53 +1,54 @@
-from transformers import pipeline, set_seed
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
 import warnings
 
-# 🔕 Suppress transformers warnings (IMPORTANT)
 warnings.filterwarnings("ignore")
 
-# 🔥 Load model ONCE
-generator = pipeline(
-    "text-generation",
-    model="distilgpt2",
-    pad_token_id=50256
-)
+# -------------------------------
+# Load model manually (NO pipeline)
+# -------------------------------
+model_name = "distilgpt2"
 
-# Optional (stable output)
-set_seed(42)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+model.eval()
 
 
 def generate_ai_suggestion(context):
     """
-    Generate clean, short AI suggestion
+    Generate clean AI suggestion (controlled)
     """
 
     prompt = f"""
-You are a senior software engineer.
+You are a senior software engineer mentor.
 
 Problem: {context}
 
-Give ONLY one short professional suggestion:
+Give one short professional suggestion:
 """
 
     try:
-        result = generator(
-            prompt,
-            max_new_tokens=30,   # ✅ only this (NO max_length)
-            do_sample=True,
-            temperature=0.6,
-            top_k=50
-        )
+        inputs = tokenizer(prompt, return_tensors="pt")
 
-        text = result[0]["generated_text"]
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=30,
+                temperature=0.6,
+                do_sample=True,
+                pad_token_id=tokenizer.eos_token_id
+            )
+
+        text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
         # 🔥 CLEAN OUTPUT
         cleaned = text.replace(prompt, "").strip()
-
-        # Take only first meaningful line
         cleaned = cleaned.split("\n")[0]
 
-        # Fallback if bad output
-        if len(cleaned) < 5 or context in cleaned:
-            return "Use clear and descriptive practices to improve code quality."
+        # fallback safety
+        if len(cleaned) < 5 or context.lower() in cleaned.lower():
+            return "Use clear and meaningful practices to improve code quality."
 
         return cleaned
 
