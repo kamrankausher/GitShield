@@ -7,7 +7,7 @@ from devflow.git_analyzer import (
 )
 import sys
 import subprocess
-
+from devflow.mentor import explain_warning
 # -------------------------------
 # STEP 1: Security Scan (BLOCK)
 # -------------------------------
@@ -58,8 +58,13 @@ warnings += check_large_files(staged_files)
 # -------------------------------
 if warnings:
     print("\n⚠️ Suggestions:\n")
-    for w in warnings:
-        print(w)
-
+for w in warnings:
+    print(w)
+    
+    explanation = explain_warning(w)
+    
+    if explanation:
+        print(f"💡 Suggestion: {explanation['suggestion']}")
+        print(f"📘 Why: {explanation['why']}\n")
 print("\n✅ Commit allowed")
 sys.exit(0)
