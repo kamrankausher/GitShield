@@ -1,14 +1,9 @@
 # -------------------------------
 # PURPOSE:
-# This module analyzes Git behavior
-# and provides intelligent suggestions
+# Analyze commit behavior
 # -------------------------------
 
-
 def analyze_commit_message(message):
-    """
-    Analyze commit message quality
-    """
     warnings = []
 
     if len(message.strip()) < 5:
@@ -23,9 +18,6 @@ def analyze_commit_message(message):
 
 
 def analyze_staged_files(file_list):
-    """
-    Analyze number of files staged
-    """
     warnings = []
 
     if len(file_list) > 10:

@@ -1,18 +1,10 @@
 import json
 import os
 
-# -------------------------------
-# PURPOSE:
-# Store and track developer behavior
-# -------------------------------
-
 MEMORY_FILE = ".devflow_memory.json"
 
 
 def load_memory():
-    """
-    Load user behavior memory
-    """
     if not os.path.exists(MEMORY_FILE):
         return {}
 
@@ -21,17 +13,11 @@ def load_memory():
 
 
 def save_memory(data):
-    """
-    Save memory to file
-    """
     with open(MEMORY_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
 
 def update_memory(warnings):
-    """
-    Update counts of warnings
-    """
     memory = load_memory()
 
     for w in warnings:
