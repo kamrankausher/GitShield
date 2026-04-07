@@ -1,43 +1,55 @@
-from transformers import pipeline
+from transformers import pipeline, set_seed
+import warnings
 
-# Load model once
+# 🔕 Suppress transformers warnings (IMPORTANT)
+warnings.filterwarnings("ignore")
+
+# 🔥 Load model ONCE
 generator = pipeline(
     "text-generation",
     model="distilgpt2",
     pad_token_id=50256
 )
 
+# Optional (stable output)
+set_seed(42)
+
 
 def generate_ai_suggestion(context):
     """
-    Generate clean AI suggestion
+    Generate clean, short AI suggestion
     """
 
     prompt = f"""
-You are a senior software engineer mentor.
+You are a senior software engineer.
 
 Problem: {context}
 
-Give a short, clear, professional suggestion in 1-2 lines:
+Give ONLY one short professional suggestion:
 """
 
     try:
         result = generator(
             prompt,
-            max_new_tokens=40,   # ✅ FIXED (no max_length)
+            max_new_tokens=30,   # ✅ only this (NO max_length)
             do_sample=True,
-            temperature=0.7
+            temperature=0.6,
+            top_k=50
         )
 
         text = result[0]["generated_text"]
 
-        # 🔥 CLEAN OUTPUT (IMPORTANT)
+        # 🔥 CLEAN OUTPUT
         cleaned = text.replace(prompt, "").strip()
 
-        # Remove extra noise
+        # Take only first meaningful line
         cleaned = cleaned.split("\n")[0]
+
+        # Fallback if bad output
+        if len(cleaned) < 5 or context in cleaned:
+            return "Use clear and descriptive practices to improve code quality."
 
         return cleaned
 
-    except Exception as e:
-        return f"AI Error: {e}"
+    except Exception:
+        return "AI suggestion unavailable."
