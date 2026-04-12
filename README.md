@@ -1,5 +1,5 @@
 <h1 align="center">
-  🛡️ GitShield
+ 🛡️ GitShield
 </h1>
 
 <p align="center">
@@ -235,5 +235,5 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  Built with ❤️ | <strong>GitShield</strong> — Your code's last line of defense
+  Built with claude | <strong>GitShield</strong> — Your code's last line of defense
 </p>
