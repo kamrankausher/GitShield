@@ -5,7 +5,7 @@ Thank you for your interest in contributing to GitShield!
 ## Getting Started
 
 1. Fork the repository.
-2. Clone your fork: `git clone https://github.com/your-username/GitShield.git`
+2. Clone your fork: `git clone https://github.com/kamrankausher/GitShield.git`
 3. Create a virtual environment: `python -m venv venv`
 4. Install dependencies: `pip install -e .[dev]`
 5. Install GitShield for testing: `gitshield init`
