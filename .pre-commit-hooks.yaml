@@ -1,0 +1,23 @@
+- id: gitshield-check
+  name: GitShield Check
+  description: Pre-commit analysis and security scan for leaked secrets.
+  entry: gitshield check --hook
+  language: python
+  types: [text]
+  pass_filenames: false
+
+- id: gitshield-scan
+  name: GitShield Scan
+  description: Security scan for secrets, API keys, and sensitive files.
+  entry: gitshield scan --staged --strict
+  language: python
+  types: [text]
+  pass_filenames: false
+
+- id: gitshield-check-msg
+  name: GitShield Commit Message Check
+  description: Analyze commit message quality.
+  entry: gitshield check-msg
+  language: python
+  stages: [commit-msg]
+  pass_filenames: false

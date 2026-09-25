@@ -15,10 +15,9 @@ Features:
 
 import os
 import re
-import subprocess
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 
 class RuleSeverity(Enum):
@@ -268,7 +267,7 @@ def analyze_staged_files(file_list: List[str]) -> List[RuleResult]:
 def _has_merge_conflicts(filepath: str) -> bool:
     """Check if a file contains merge conflict markers."""
     try:
-        with open(filepath, "r", errors="ignore") as f:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
             content = f.read()
         return bool(re.search(r'^[<>=]{7}', content, re.MULTILINE))
     except (OSError, PermissionError):
@@ -297,7 +296,7 @@ def analyze_branch_name(branch_name: str) -> List[RuleResult]:
             rule_name="direct_main_commit",
             severity=RuleSeverity.WARNING,
             message=f"Committing directly to '{branch_name}' branch",
-            suggestion=f"Create a feature branch: git checkout -b feature/your-feature",
+            suggestion="Create a feature branch: git checkout -b feature/your-feature",
             category="branch",
         ))
         return results
@@ -318,7 +317,7 @@ def analyze_branch_name(branch_name: str) -> List[RuleResult]:
         results.append(RuleResult(
             rule_name="branch_bad_chars",
             severity=RuleSeverity.BLOCK,
-            message=f"Branch name contains invalid characters",
+            message="Branch name contains invalid characters",
             suggestion="Use lowercase, hyphens, and slashes only: feature/my-feature",
             category="branch",
         ))
@@ -344,7 +343,7 @@ def check_gitignore_exists(repo_path: str = ".") -> List[RuleResult]:
         ))
     else:
         try:
-            with open(gitignore_path, "r") as f:
+            with open(gitignore_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Check for common missing entries

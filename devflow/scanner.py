@@ -15,7 +15,7 @@ Features:
 
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
 
@@ -132,20 +132,20 @@ SECRET_PATTERNS = [
     {"name": "Heroku API Key", "pattern": r'(?i)heroku(.{0,20})?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', "severity": Severity.HIGH},
 
     # ── Generic Secrets ──
-    {"name": "Generic API Key", "pattern": r'(?i)api[_-]?key\s*[=:]\s*["\'][a-zA-Z0-9_\-]{16,}["\']', "severity": Severity.HIGH},
-    {"name": "Generic Secret", "pattern": r'(?i)(?:secret|token|password|passwd|pwd)\s*[=:]\s*["\'][^\s"\']{8,}["\']', "severity": Severity.HIGH},
-    {"name": "Generic Auth", "pattern": r'(?i)(?:auth|access)[_-]?(?:token|key)\s*[=:]\s*["\'][^\s"\']{8,}["\']', "severity": Severity.HIGH},
-    {"name": "Private Key Inline", "pattern": r'(?i)private[_-]?key\s*[=:]\s*["\'][^\s"\']{10,}["\']', "severity": Severity.CRITICAL},
+    {"name": "Generic API Key", "pattern": r'(?i)api[_-]?key\s*[=:]\s*["\']([a-zA-Z0-9_\-]{16,})["\']', "severity": Severity.HIGH},
+    {"name": "Generic Secret", "pattern": r'(?i)(?:secret|token|password|passwd|pwd)\s*[=:]\s*["\']([^\s"\']{8,})["\']', "severity": Severity.HIGH},
+    {"name": "Generic Auth", "pattern": r'(?i)(?:auth|access)[_-]?(?:token|key)\s*[=:]\s*["\']([^\s"\']{8,})["\']', "severity": Severity.HIGH},
+    {"name": "Private Key Inline", "pattern": r'(?i)private[_-]?key\s*[=:]\s*["\']([^\s"\']{10,})["\']', "severity": Severity.CRITICAL},
 
     # ── NPM ──
-    {"name": "NPM Token", "pattern": r'//registry\.npmjs\.org/:_authToken=[^\s]+', "severity": Severity.HIGH},
+    {"name": "NPM Token", "pattern": r'//registry\.npmjs\.org/:_authToken=([^\s]+)', "severity": Severity.HIGH},
 
     # ── Docker ──
-    {"name": "Docker Auth", "pattern": r'(?i)docker(.{0,20})?(password|token|auth)\s*[=:]\s*["\'][^\s"\']+["\']', "severity": Severity.HIGH},
+    {"name": "Docker Auth", "pattern": r'(?i)docker(.{0,20})?(password|token|auth)\s*[=:]\s*["\']([^\s"\']+)["\']', "severity": Severity.HIGH},
 
     # ── Misc ──
     {"name": "IP Address (Private)", "pattern": r'\b(?:10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.\d{1,3}\.\d{1,3}\b', "severity": Severity.LOW},
-    {"name": "Hardcoded Password", "pattern": r'(?i)(?:password|passwd|pwd)\s*=\s*["\'][^"\']{4,}["\']', "severity": Severity.HIGH},
+    {"name": "Hardcoded Password", "pattern": r'(?i)(?:password|passwd|pwd)\s*=\s*["\']([^"\']{4,})["\']', "severity": Severity.HIGH},
 ]
 
 # ═══════════════════════════════════════════════════════════════
@@ -244,15 +244,39 @@ def is_sensitive_file(file_path: str) -> Optional[Severity]:
     return None
 
 
-def scan_file_for_secrets(file_path: str) -> List[Finding]:
+from devflow.config import load_config
+import math
+
+def shannon_entropy(data: str) -> float:
+    """Calculate the Shannon entropy of a string."""
+    if not data:
+        return 0.0
+    entropy = 0.0
+    length = len(data)
+    occurrences = {}
+    for char in data:
+        occurrences[char] = occurrences.get(char, 0) + 1
+    for count in occurrences.values():
+        p = count / length
+        entropy -= p * math.log2(p)
+    return entropy
+
+def scan_file_for_secrets(file_path: str, config: Optional[dict] = None) -> List[Finding]:
     """Scan a single file for secret patterns."""
     findings = []
 
     if is_binary_file(file_path):
         return findings
+        
+    if config is None:
+        config = load_config()
+        
+    # Check file exclusions
+    if any(ignore_file in file_path for ignore_file in config.get("ignore_files", [])):
+        return findings
 
     try:
-        with open(file_path, "r", errors="ignore") as f:
+        with open(file_path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
 
         for line_num, line in enumerate(lines, 1):
@@ -260,9 +284,28 @@ def scan_file_for_secrets(file_path: str) -> List[Finding]:
             stripped = line.strip()
             if not stripped or stripped.startswith("#") or stripped.startswith("//"):
                 continue
+                
+            # Check string exclusions
+            if any(ignore_str in line for ignore_str in config.get("ignore_strings", [])):
+                continue
 
             for pattern_info in SECRET_PATTERNS:
-                if re.search(pattern_info["pattern"], line):
+                match = re.search(pattern_info["pattern"], line)
+                if match:
+                    # Check regex exclusions
+                    matched_str = match.group(0)
+                    if any(re.search(ignore_regex, matched_str) for ignore_regex in config.get("ignore_patterns", [])):
+                        continue
+                        
+                    # Entropy check for generic secrets
+                    if "Generic" in pattern_info["name"] or "Password" in pattern_info["name"]:
+                        # If there are groups, use the last group as the secret value
+                        secret_value = match.group(match.lastindex) if match.lastindex else matched_str
+                        # A typical random string of base62 has an entropy of ~ 5.95 bits/char
+                        # We use 3.0 as a threshold for rejecting common words (e.g. "password", "test")
+                        if shannon_entropy(secret_value) < 3.0:
+                            continue
+                        
                     findings.append(Finding(
                         file=file_path,
                         finding_type="SECRET_DETECTED",
@@ -297,18 +340,22 @@ def check_file_size(file_path: str) -> Optional[Finding]:
     return None
 
 
-def scan_directory(directory: str, staged_only: bool = False) -> List[Finding]:
+def scan_directory(directory: str, staged_only: bool = False, config: Optional[dict] = None) -> List[Finding]:
     """
     Scan an entire directory tree for security issues.
 
     Args:
         directory: Path to scan
         staged_only: If True, only scan Git staged files
+        config: Configuration dictionary
 
     Returns:
         List of Finding objects sorted by severity
     """
     findings = []
+    
+    if config is None:
+        config = load_config()
 
     if staged_only:
         import subprocess
@@ -317,6 +364,7 @@ def scan_directory(directory: str, staged_only: bool = False) -> List[Finding]:
                 ["git", "diff", "--cached", "--name-only"],
                 capture_output=True, text=True, cwd=directory,
                 encoding="utf-8", errors="replace",
+                stdin=subprocess.DEVNULL,
             )
             files_to_scan = [
                 os.path.join(directory, f.strip())
@@ -328,22 +376,26 @@ def scan_directory(directory: str, staged_only: bool = False) -> List[Finding]:
         for file_path in files_to_scan:
             if not os.path.exists(file_path):
                 continue
-            _scan_single_file(file_path, findings)
+            _scan_single_file(file_path, findings, config)
     else:
         for root, dirs, files in os.walk(directory):
-            dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
+            dirs[:] = [d for d in dirs if d not in config.get("exclude_dirs", EXCLUDED_DIRS)]
 
             for fname in files:
                 file_path = os.path.join(root, fname)
-                _scan_single_file(file_path, findings)
+                _scan_single_file(file_path, findings, config)
 
     # Sort by severity (CRITICAL first)
     findings.sort(key=lambda f: f.severity.priority, reverse=True)
     return findings
 
 
-def _scan_single_file(file_path: str, findings: List[Finding]):
+def _scan_single_file(file_path: str, findings: List[Finding], config: Optional[dict] = None):
     """Scan a single file for all security issues."""
+    
+    if config and any(ignore_file in file_path for ignore_file in config.get("ignore_files", [])):
+        return
+        
     # Check sensitive file
     sensitivity = is_sensitive_file(file_path)
     if sensitivity:
@@ -361,7 +413,7 @@ def _scan_single_file(file_path: str, findings: List[Finding]):
         findings.append(size_finding)
 
     # Scan for secrets in content
-    secret_findings = scan_file_for_secrets(file_path)
+    secret_findings = scan_file_for_secrets(file_path, config)
     findings.extend(secret_findings)
 
 

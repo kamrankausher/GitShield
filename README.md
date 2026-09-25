@@ -46,7 +46,7 @@
 
 ```bash
 # Step 1: Clone the repository
-git clone https://github.com/your-username/gitshield.git
+git clone https://github.com/kamrankausher/GitShield.git
 cd gitshield
 
 # Step 2: Install dependencies
@@ -139,6 +139,35 @@ gitshield health .
 
 Each finding includes **severity level** (🔴 Critical → 🔵 Low), **file + line number**, and **remediation advice**.
 
+### Ignore False Positives
+To ignore specific false positives, create a `.gitshieldignore` file or add a `[tool.gitshield.ignore]` section in your `pyproject.toml` (or `.gitshield.toml`).
+```ini
+# .gitshieldignore
+tests/fixtures/
+# Regex patterns must start with "regex:"
+regex:(?i)api_key\s*=\s*['"]test_
+# Exact strings must start with "string:"
+string:sk_test_12345
+```
+
+### Pre-commit Integration
+GitShield natively supports the standard `pre-commit` framework! Just add this to your `.pre-commit-config.yaml`:
+```yaml
+repos:
+  - repo: https://github.com/kamrankausher/GitShield
+    rev: v1.0.0
+    hooks:
+      - id: gitshield-check
+      - id: gitshield-scan
+      - id: gitshield-check-msg
+```
+
+### Machine-Readable Output
+For CI/CD integrations, you can output the scan results in JSON format:
+```bash
+gitshield scan . --format json
+```
+
 ---
 
 ## 📝 Rule Engine
@@ -189,7 +218,6 @@ gitshield/
 │   └── test_modules.py
 ├── vscode-extension/           # VS Code extension
 ├── pyproject.toml              # Build config
-├── setup.py                    # Package installer
 ├── requirements.txt            # Dependencies
 ├── LICENSE                     # MIT License
 └── README.md                   # This file

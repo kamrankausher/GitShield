@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gitshield"
-version = "1.0.0"
+dynamic = ["version"]
 description = "AI-powered Git Guardian — prevents secret leaks, enforces best practices, and coaches developers in real-time"
 readme = "README.md"
 license = {text = "MIT"}
@@ -31,21 +31,40 @@ dependencies = [
     "click>=8.0",
     "rich>=13.0",
     "colorama>=0.4.6",
+    "tomli>=2.0.1; python_version < '3.11'",
 ]
 
 [project.scripts]
 gitshield = "devflow.cli:main"
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
 [project.urls]
-Homepage = "https://github.com/your-username/gitshield"
-Repository = "https://github.com/your-username/gitshield"
-Issues = "https://github.com/your-username/gitshield/issues"
+# TODO: Replace these placeholder URLs before publishing!
+# If left as-is, they will fail loudly or point to a non-existent repo.
+Homepage = "https://github.com/kamrankausher/GitShield"
+Repository = "https://github.com/kamrankausher/GitShield"
+Issues = "https://github.com/kamrankausher/GitShield/issues"
 
 [tool.setuptools.packages.find]
 include = ["devflow*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "devflow.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = []

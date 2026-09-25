@@ -18,8 +18,8 @@ Features:
 import os
 import subprocess
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict
 from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -56,6 +56,7 @@ def _run_git(args: List[str], cwd: str = ".") -> Optional[str]:
             ["git"] + args,
             capture_output=True, text=True, cwd=cwd,
             timeout=10, encoding="utf-8", errors="replace",
+            stdin=subprocess.DEVNULL,
         )
         if result.returncode == 0:
             return result.stdout.strip()
@@ -133,7 +134,7 @@ def get_commit_message(cwd: str = ".") -> str:
     """Get the current commit message (from COMMIT_EDITMSG)."""
     commit_file = os.path.join(cwd, ".git", "COMMIT_EDITMSG")
     try:
-        with open(commit_file, "r") as f:
+        with open(commit_file, encoding="utf-8") as f:
             return f.read().strip()
     except (FileNotFoundError, OSError):
         return ""

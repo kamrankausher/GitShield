@@ -5,8 +5,8 @@ Guides developers through GitHub workflows including PR creation,
 contribution flows, repo setup, and best practices.
 """
 
-from typing import List, Dict
 from dataclasses import dataclass
+from typing import Dict, List
 
 
 @dataclass

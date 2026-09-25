@@ -1,9 +1,12 @@
 """Tests for the rules engine module."""
 
-import pytest
 from devflow.rules import (
-    analyze_commit_message, analyze_staged_files, analyze_branch_name,
-    run_all_rules, has_blocking_issues, RuleSeverity,
+    RuleSeverity,
+    analyze_branch_name,
+    analyze_commit_message,
+    analyze_staged_files,
+    has_blocking_issues,
+    run_all_rules,
 )
 
 

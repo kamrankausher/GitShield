@@ -13,9 +13,8 @@ Features:
 - Fallback generation with helpful defaults
 """
 
-from typing import List, Optional, Dict
 import random
-
+from typing import Dict, List
 
 # ═══════════════════════════════════════════════════════════════
 # INTELLIGENT RESPONSE DATABASE (50+ responses)

@@ -1,4 +1,3 @@
 click>=8.0
 rich>=13.0
 colorama>=0.4.6
-pytest>=7.0

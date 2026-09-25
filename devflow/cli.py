@@ -17,8 +17,8 @@ Commands:
     gitshield doctor        Full diagnostic
 """
 
-import sys
 import os
+import sys
 
 # Fix Windows terminal encoding for unicode/emoji output
 if sys.platform == "win32":
@@ -26,34 +26,37 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
-import click
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
-from rich.columns import Columns
-from rich import box
-
-from devflow import __version__, BANNER
-from devflow.scanner import scan_directory, get_scan_summary, Severity
-from devflow.rules import run_all_rules, has_blocking_issues, RuleSeverity
-from devflow.git_analyzer import (
-    is_git_repo, get_current_branch, get_staged_files,
-    get_modified_files, get_untracked_files, get_full_status,
-    get_commit_message, get_last_n_commits,
-)
-from devflow.mentor import explain_warning, get_mentor_advice, get_progressive_tip
-from devflow.memory import update_memory, get_statistics, get_behavior_insights, record_scan
-from devflow.ai_engine import generate_ai_suggestion, generate_detailed_analysis
-from devflow.recovery import get_recovery_options, execute_recovery
-from devflow.health import calculate_health, get_repo_stats
-from devflow.gitignore_gen import (
-    detect_project_types, generate_gitignore, get_missing_patterns,
-    get_tracked_but_should_ignore, write_gitignore,
-)
-from devflow.github_assistant import get_guide, get_available_topics
-from devflow.hooks_manager import install_hooks, uninstall_hooks, get_hook_status
 import io
+
+import click
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+from devflow import BANNER, __version__
+from devflow.ai_engine import generate_ai_suggestion
+from devflow.git_analyzer import (
+    get_commit_message,
+    get_current_branch,
+    get_staged_files,
+    is_git_repo,
+)
+from devflow.github_assistant import get_available_topics, get_guide
+from devflow.gitignore_gen import (
+    detect_project_types,
+    generate_gitignore,
+    get_missing_patterns,
+    get_tracked_but_should_ignore,
+    write_gitignore,
+)
+from devflow.health import calculate_health, get_repo_stats
+from devflow.hooks_manager import get_hook_status, install_hooks, uninstall_hooks
+from devflow.memory import get_behavior_insights, get_statistics, record_scan, update_memory
+from devflow.mentor import get_progressive_tip
+from devflow.recovery import execute_recovery, get_recovery_options
+from devflow.rules import RuleSeverity, has_blocking_issues, run_all_rules
+from devflow.scanner import Severity, get_scan_summary, scan_directory
 
 # Create a Console that works with Unicode on Windows
 if sys.platform == "win32":
@@ -94,12 +97,34 @@ def main(ctx):
 @click.argument("path", default=".")
 @click.option("--strict", is_flag=True, help="Exit with error on any finding")
 @click.option("--staged", is_flag=True, help="Only scan staged files")
-def scan(path, strict, staged):
+@click.option("--format", "out_format", default="text", type=click.Choice(["text", "json"]), help="Output format")
+def scan(path, strict, staged, out_format):
     """🔒 Scan for secrets, API keys, and sensitive files."""
-    console.print("\n🔒 [bold]GitShield Security Scanner[/bold]\n", style="cyan")
+    if out_format == "text":
+        console.print("\n🔒 [bold]GitShield Security Scanner[/bold]\n", style="cyan")
 
     findings = scan_directory(path, staged_only=staged)
     record_scan(len(findings))
+    
+    summary = get_scan_summary(findings)
+    
+    if out_format == "json":
+        import json
+        import dataclasses
+        
+        output = {
+            "summary": summary,
+            "findings": []
+        }
+        for f in findings:
+            d = dataclasses.asdict(f)
+            d["severity"] = f.severity.value
+            output["findings"].append(d)
+            
+        print(json.dumps(output, indent=2))
+        if strict or summary["critical"] > 0:
+            sys.exit(1)
+        sys.exit(0)
 
     if not findings:
         console.print(Panel(
@@ -108,8 +133,6 @@ def scan(path, strict, staged):
             border_style="green", title="Scan Complete",
         ))
         sys.exit(0)
-
-    summary = get_scan_summary(findings)
 
     # Display findings
     table = Table(title="Security Findings", box=box.ROUNDED, border_style="red")
@@ -325,7 +348,7 @@ def fix():
             console.print(f"\n  [bold]{current_cat}:[/bold]")
         console.print(f"    [{i:2d}] {opt['label']}")
 
-    console.print(f"\n    [ 0] Cancel\n")
+    console.print("\n    [ 0] Cancel\n")
 
     try:
         choice = click.prompt("Select option", type=int, default=0)
@@ -353,7 +376,7 @@ def fix():
             f"{action.description}\n\n"
             f"Risk: {action.risk_icon} {action.risk_level.upper()}\n"
             + (f"\n⚠️ {action.warning}\n" if action.warning else "") +
-            f"\n[bold]Commands:[/bold]\n" +
+            "\n[bold]Commands:[/bold]\n" +
             "\n".join(f"  [cyan]{c}[/cyan]" for c in action.commands if c),
             border_style="yellow" if action.risk_level != "safe" else "green",
         ))
@@ -446,7 +469,7 @@ def gitignore(write, check_mode):
     else:
         console.print("[dim]Preview (use --write to save):[/dim]\n")
         console.print(content[:500] + ("\n..." if len(content) > 500 else ""))
-        console.print(f"\n[dim]Use 'devflow gitignore --write' to write file[/dim]")
+        console.print("\n[dim]Use 'devflow gitignore --write' to write file[/dim]")
 
 
 # ═══════════════════════════════════════════════════════════════

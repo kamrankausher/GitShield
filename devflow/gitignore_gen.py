@@ -5,9 +5,8 @@ Auto-detects project type and generates appropriate .gitignore files.
 """
 
 import os
-from typing import List, Optional, Set
 import subprocess
-
+from typing import List, Optional
 
 PROJECT_INDICATORS = {
     "python": {"files": ["setup.py", "pyproject.toml", "requirements.txt"], "exts": {".py"}},
@@ -76,7 +75,7 @@ def get_missing_patterns(repo_path: str = ".") -> List[str]:
     existing = set()
     if os.path.exists(gitignore_path):
         try:
-            with open(gitignore_path, "r") as f:
+            with open(gitignore_path, encoding="utf-8") as f:
                 for line in f:
                     s = line.strip()
                     if s and not s.startswith("#"):
@@ -102,6 +101,7 @@ def get_tracked_but_should_ignore(repo_path: str = ".") -> List[str]:
         out = subprocess.run(
             ["git", "ls-files"], capture_output=True, text=True,
             cwd=repo_path, timeout=10, encoding="utf-8", errors="replace",
+            stdin=subprocess.DEVNULL,
         )
         if out.returncode == 0:
             for fp in out.stdout.splitlines():

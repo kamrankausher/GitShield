@@ -16,10 +16,10 @@ Features:
 
 import json
 import os
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from collections import Counter
+from datetime import datetime
+from typing import Dict, List
 
+from devflow import __version__
 
 MEMORY_FILE = ".devflow_memory.json"
 
@@ -27,7 +27,7 @@ MEMORY_FILE = ".devflow_memory.json"
 # DEFAULT MEMORY STRUCTURE
 # ═══════════════════════════════════════════════════════════════
 DEFAULT_MEMORY = {
-    "version": "1.0.0",
+    "version": __version__,
     "created_at": "",
     "updated_at": "",
     "total_sessions": 0,
@@ -66,7 +66,7 @@ def load_memory(repo_path: str = ".") -> Dict:
         return memory
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
 
         # Migration: old format → new format

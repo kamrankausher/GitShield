@@ -8,8 +8,7 @@ Supports cross-platform hooks (Windows Git Bash + Unix).
 import os
 import stat
 import subprocess
-from typing import Optional, List, Dict
-
+from typing import Dict, List, Optional
 
 PRE_COMMIT_HOOK = '''#!/bin/sh
 #
@@ -136,6 +135,7 @@ def get_hooks_dir(repo_path: str = ".") -> Optional[str]:
             ["git", "rev-parse", "--git-dir"],
             capture_output=True, text=True, cwd=repo_path, timeout=5,
             encoding="utf-8", errors="replace",
+            stdin=subprocess.DEVNULL,
         )
         if result.returncode == 0:
             git_dir = result.stdout.strip()
@@ -173,7 +173,7 @@ def install_hooks(repo_path: str = ".", hooks: Optional[List[str]] = None) -> Di
         if os.path.exists(hook_path):
             backup_path = hook_path + ".backup"
             try:
-                with open(hook_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(hook_path, encoding="utf-8", errors="replace") as f:
                     content = f.read()
                 if not _is_our_hook(content):
                     os.rename(hook_path, backup_path)
@@ -207,7 +207,7 @@ def uninstall_hooks(repo_path: str = ".", hooks: Optional[List[str]] = None) -> 
         hook_path = os.path.join(hooks_dir, hook_name)
         if os.path.exists(hook_path):
             try:
-                with open(hook_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(hook_path, encoding="utf-8", errors="replace") as f:
                     content = f.read()
                 if _is_our_hook(content):
                     os.remove(hook_path)
@@ -238,7 +238,7 @@ def get_hook_status(repo_path: str = ".") -> Dict[str, str]:
         hook_path = os.path.join(hooks_dir, hook_name)
         if os.path.exists(hook_path):
             try:
-                with open(hook_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(hook_path, encoding="utf-8", errors="replace") as f:
                     content = f.read()
                 if _is_our_hook(content):
                     status[hook_name] = "active"

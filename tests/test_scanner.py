@@ -2,10 +2,14 @@
 
 import os
 import tempfile
-import pytest
+
 from devflow.scanner import (
-    scan_directory, scan_file_for_secrets, is_sensitive_file,
-    check_file_size, Severity, Finding, get_scan_summary,
+    Finding,
+    Severity,
+    get_scan_summary,
+    is_sensitive_file,
+    scan_directory,
+    scan_file_for_secrets,
 )
 
 

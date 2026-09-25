@@ -16,8 +16,8 @@ Features:
 """
 
 import subprocess
-from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -41,6 +41,7 @@ def _run_git(args: List[str], cwd: str = ".") -> Optional[str]:
             ["git"] + args,
             capture_output=True, text=True, cwd=cwd, timeout=10,
             encoding="utf-8", errors="replace",
+            stdin=subprocess.DEVNULL,
         )
         return result.stdout.strip() if result.returncode == 0 else None
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
@@ -121,20 +122,20 @@ def remove_file_from_history(filename: str) -> RecoveryAction:
         title=f"Remove '{filename}' From Git History",
         description="Completely removes a file from all Git history. Use this for accidentally committed secrets.",
         commands=[
-            f"# Option 1: Using git filter-branch (built-in)",
-            f"git filter-branch --force --index-filter \\",
+            "# Option 1: Using git filter-branch (built-in)",
+            "git filter-branch --force --index-filter \\",
             f"  'git rm --cached --ignore-unmatch {filename}' \\",
-            f"  --prune-empty --tag-name-filter cat -- --all",
-            f"",
-            f"# Option 2: Using BFG Repo-Cleaner (faster, recommended)",
-            f"# Download: https://rtyley.github.io/bfg-repo-cleaner/",
+            "  --prune-empty --tag-name-filter cat -- --all",
+            "",
+            "# Option 2: Using BFG Repo-Cleaner (faster, recommended)",
+            "# Download: https://rtyley.github.io/bfg-repo-cleaner/",
             f"# java -jar bfg.jar --delete-files {filename}",
-            f"",
-            f"# After either method:",
-            f"git push origin --force --all",
-            f"git push origin --force --tags",
-            f"",
-            f"# Add to .gitignore to prevent future commits:",
+            "",
+            "# After either method:",
+            "git push origin --force --all",
+            "git push origin --force --tags",
+            "",
+            "# Add to .gitignore to prevent future commits:",
             f"echo '{filename}' >> .gitignore",
         ],
         risk_level="dangerous",
@@ -203,14 +204,14 @@ def fix_diverged_branch(branch: str = "main") -> RecoveryAction:
         title=f"Fix Diverged Branch '{branch}'",
         description="Reconcile local and remote branches that have diverged.",
         commands=[
-            f"# Option 1: Rebase (clean history, recommended):",
+            "# Option 1: Rebase (clean history, recommended):",
             f"git pull --rebase origin {branch}",
-            f"",
-            f"# Option 2: Merge (creates merge commit):",
+            "",
+            "# Option 2: Merge (creates merge commit):",
             f"git pull origin {branch}",
-            f"",
-            f"# Option 3: Force reset to remote (LOSES local commits):",
-            f"git fetch origin",
+            "",
+            "# Option 3: Force reset to remote (LOSES local commits):",
+            "git fetch origin",
             f"git reset --hard origin/{branch}",
         ],
         risk_level="moderate",
@@ -240,14 +241,14 @@ def undo_pushed_commit(cwd: str = ".") -> RecoveryAction:
         title="Revert a Pushed Commit",
         description="Creates a NEW commit that undoes the changes. Safe for shared branches.",
         commands=[
-            f"# Revert the last commit:",
-            f"git revert HEAD",
-            f"",
-            f"# Revert a specific commit:",
+            "# Revert the last commit:",
+            "git revert HEAD",
+            "",
+            "# Revert a specific commit:",
             f"git revert {last_hash[:8]}",
-            f"",
-            f"# Then push the revert:",
-            f"git push origin",
+            "",
+            "# Then push the revert:",
+            "git push origin",
         ],
         risk_level="safe",
     )
@@ -285,14 +286,14 @@ def recover_secret_leak(secret_file: str = ".env") -> RecoveryAction:
             "# ═══ STEP 1: Remove from tracking ═══",
             f"git rm --cached {secret_file}",
             f"echo '{secret_file}' >> .gitignore",
-            f"git add .gitignore",
+            "git add .gitignore",
             f"git commit -m 'chore: remove {secret_file} and update .gitignore'",
             "",
             "# ═══ STEP 2: Remove from history ═══",
-            f"# Using git filter-branch:",
-            f"git filter-branch --force --index-filter \\",
+            "# Using git filter-branch:",
+            "git filter-branch --force --index-filter \\",
             f"  'git rm --cached --ignore-unmatch {secret_file}' \\",
-            f"  --prune-empty --tag-name-filter cat -- --all",
+            "  --prune-empty --tag-name-filter cat -- --all",
             "",
             "# Force push cleaned history:",
             "git push origin --force --all",

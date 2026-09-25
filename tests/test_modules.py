@@ -1,15 +1,19 @@
 """Tests for recovery, health, AI engine, and other modules."""
 
-import pytest
-from devflow.recovery import (
-    undo_last_commit, amend_last_commit, remove_file_from_history,
-    unstage_file, recover_detached_head, recover_secret_leak,
-    get_recovery_options, execute_recovery,
-)
 from devflow.ai_engine import generate_ai_suggestion, generate_detailed_analysis
-from devflow.mentor import explain_warning, get_mentor_advice, get_progressive_tip
+from devflow.github_assistant import get_available_topics, get_guide
 from devflow.gitignore_gen import detect_project_types, generate_gitignore
-from devflow.github_assistant import get_guide, get_available_topics
+from devflow.mentor import explain_warning, get_mentor_advice, get_progressive_tip
+from devflow.recovery import (
+    amend_last_commit,
+    execute_recovery,
+    get_recovery_options,
+    recover_detached_head,
+    recover_secret_leak,
+    remove_file_from_history,
+    undo_last_commit,
+    unstage_file,
+)
 
 
 class TestRecovery:

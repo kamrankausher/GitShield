@@ -4,6 +4,11 @@
     "description": "AI-powered Git Guardian — prevents secret leaks, enforces best practices, coaches developers",
     "version": "1.0.0",
     "publisher": "gitshield",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kamrankausher/GitShield"
+    },
+    "license": "MIT",
     "engines": { "vscode": "^1.80.0" },
     "categories": ["Other", "Linters"],
     "activationEvents": ["workspaceContains:.git"],

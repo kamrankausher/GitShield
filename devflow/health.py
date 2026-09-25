@@ -17,11 +17,10 @@ Features:
 """
 
 import os
-import re
 import subprocess
-from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -56,6 +55,7 @@ def _run_git(args: List[str], cwd: str = ".") -> Optional[str]:
         result = subprocess.run(
             ["git"] + args, capture_output=True, text=True,
             cwd=cwd, timeout=15, encoding="utf-8", errors="replace",
+            stdin=subprocess.DEVNULL,
         )
         return result.stdout.strip() if result.returncode == 0 else None
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
@@ -312,7 +312,7 @@ def check_gitignore_quality(repo_path: str = ".") -> Tuple[int, List[HealthIssue
         return 10, [HealthIssue("config", "critical", "No .gitignore file", "Run 'devflow gitignore'")]
 
     try:
-        with open(gitignore_path, "r") as f:
+        with open(gitignore_path, encoding="utf-8") as f:
             content = f.read()
     except OSError:
         return 0, issues
